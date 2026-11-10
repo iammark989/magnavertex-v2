@@ -1,19 +1,28 @@
-export default function Home() {
+import HeroSection from '../../components/sections/HeroSection';
+import WebLayout from '../../layouts/WebLayout';
+import ServicesSection from '../../components/sections/ServicesSection';
+import AboutSection from '../../components/sections/AboutSection';
+import ContactSection from '../../components/sections/ContactSection';
+import BusinessSolutionSection from '../../components/sections/BusinessSolutions';
+
+import type { Service } from '../../types/service';
+
+interface HomeProps {
+    services: Service[];
+}
+
+export default function Home({ services }: HomeProps) {
     return (
-        <main className="min-h-screen bg-white flex items-center justify-center">
-            <div className="text-center px-6">
-                <h1 className="text-4xl font-bold text-slate-900">
-                    Magna Vertex Technologies
-                </h1>
+        <WebLayout>
+            <HeroSection />
 
-                <p className="mt-4 text-lg text-slate-600">
-                    Building Digital Solutions for Modern Businesses.
-                </p>
+            <ServicesSection services={services} />
 
-                <p className="mt-6 text-sm text-sky-600 font-medium">
-                    Laravel + Inertia + React
-                </p>
-            </div>
-        </main>
+            <BusinessSolutionSection />
+
+            <AboutSection />
+
+            <ContactSection />
+        </WebLayout>
     );
 }
