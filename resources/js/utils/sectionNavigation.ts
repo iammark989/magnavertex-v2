@@ -1,45 +1,53 @@
 import { router } from '@inertiajs/react';
 
+/**
+ * Scroll to a section while accounting for the fixed navbar.
+ */
+export function scrollToElement(id: string) {
+    const element = document.getElementById(id);
+
+    if (!element) return;
+
+    const navbarOffset = 80;
+
+    const elementPosition =
+        element.getBoundingClientRect().top + window.scrollY;
+
+    window.scrollTo({
+        top: elementPosition - navbarOffset,
+        behavior: 'smooth',
+    });
+}
+
+/**
+ * Navigate to a homepage section.
+ */
 export function scrollToSection(id: string) {
-    const section = document.getElementById(id);
-
-    // If the section already exists on the current page,
-    // scroll directly to it.
-    if (window.location.pathname === '/' && section) {
-        section.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-        });
-
+    // If already on the homepage, scroll directly.
+    if (window.location.pathname === '/' &&
+        document.getElementById(id)) {
+        scrollToElement(id);
         return;
     }
 
-    // Otherwise, return to the homepage and scroll to the section.
+    // Otherwise, navigate home first.
     router.visit(`/#${encodeURIComponent(id)}`, {
-        preserveScroll: true,
+        preserveScroll: false,
 
         onSuccess: () => {
+            // Wait for Inertia and React to finish rendering.
             window.requestAnimationFrame(() => {
-                document.getElementById(id)?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
+                window.requestAnimationFrame(() => {
+                    scrollToElement(id);
                 });
             });
         },
     });
 }
 
+/**
+ * Navigate to the homepage hero section.
+ */
 export function goToHome() {
-    const hero = document.getElementById('hero');
-
-    if (window.location.pathname === '/' && hero) {
-        hero.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-        });
-
-        return;
-    }
-
-    router.visit('/');
+    scrollToSection('hero');
 }

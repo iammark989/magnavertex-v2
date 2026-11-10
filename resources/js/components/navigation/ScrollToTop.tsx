@@ -1,26 +1,28 @@
 import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 
+import { scrollToElement } from '../../utils/sectionNavigation';
+
 export default function ScrollToTop() {
     const { url } = usePage();
 
     useEffect(() => {
-        const currentUrl = new URL(url, window.location.origin);
-        const hash = currentUrl.hash;
+        // Check the actual browser URL for a section hash.
+        const hash = window.location.hash;
 
         if (hash) {
             const sectionId = decodeURIComponent(hash.substring(1));
 
             window.requestAnimationFrame(() => {
-                document.getElementById(sectionId)?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
+                window.requestAnimationFrame(() => {
+                    scrollToElement(sectionId);
                 });
             });
 
             return;
         }
 
+        // No section requested: return to the top.
         window.scrollTo({
             top: 0,
             left: 0,

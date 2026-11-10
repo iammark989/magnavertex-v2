@@ -6,19 +6,24 @@ import ContactSection from '../../components/sections/ContactSection';
 import BusinessSolutionSection from '../../components/sections/BusinessSolutions';
 
 import type { Service } from '../../types/service';
+import type { BusinessSolution } from '../../types/businessSolution';
 
 interface HomeProps {
     services: Service[];
+    businessSolutions: BusinessSolution[];
 }
 
-export default function Home({ services }: HomeProps) {
+export default function Home({
+    services,
+    businessSolutions,
+}: HomeProps) {
     return (
         <WebLayout>
             <HeroSection />
 
             <ServicesSection services={services} />
 
-            <BusinessSolutionSection />
+            <BusinessSolutionSection solutions={businessSolutions} />
 
             <AboutSection />
 

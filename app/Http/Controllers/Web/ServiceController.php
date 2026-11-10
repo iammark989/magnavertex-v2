@@ -28,4 +28,26 @@ class ServiceController extends Controller
             'services' => $services,
         ]);
     }
+
+    public function show(string $slug): Response
+    {
+        $service = Service::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail([
+                'id',
+                'title',
+                'slug',
+                'short_description',
+                'description',
+                'icon',
+                'sort_order',
+                'is_featured',
+            ]);
+
+        return Inertia::render('web/Service', [
+            'service' => $service,
+        ]);
+    }
+
 }
