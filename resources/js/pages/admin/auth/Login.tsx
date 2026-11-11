@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 
-import Button from '../../../../components/ui/Button';
-import Logo from '../../../../components/ui/Logo';
+import Button from '../../../components/ui/Button';
+import Logo from '../../../components/ui/Logo';
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);

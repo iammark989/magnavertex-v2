@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Redirect unauthenticated users to the admin login page.
         $middleware->redirectGuestsTo('/admin/login');
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
