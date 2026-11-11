@@ -7,3 +7,88 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+
+@keyframes hero-flow {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(310%);
+        opacity: 0;
+    }
+}
+
+@keyframes hero-flow-reverse {
+    0% {
+        transform: translateY(400%);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0%);
+        opacity: 0;
+    }
+}
+
+.hero-flow {
+    animation: hero-flow 2.5s ease-in-out infinite;
+}
+
+.hero-flow-reverse {
+    animation: hero-flow-reverse 2.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@keyframes hero-logo-ring {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.hero-logo-ring {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 250deg,
+        rgba(34, 211, 238, 0.15) 285deg,
+        rgba(34, 211, 238, 0.9) 320deg,
+        rgba(34, 211, 238, 0.15) 345deg,
+        transparent 360deg
+    );
+
+    animation: hero-logo-ring 5s linear infinite;
+}
+
