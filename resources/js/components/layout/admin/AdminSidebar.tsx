@@ -17,7 +17,6 @@ interface AuthUser {
 
 interface SharedProps {
     [key: string]: unknown;
-    url: string;
     auth: {
         user: AuthUser | null;
     };
@@ -65,7 +64,9 @@ export default function AdminSidebar({
     isOpen,
     onClose,
 }: AdminSidebarProps) {
-    const { auth, url } = usePage<SharedProps>().props;
+    const page = usePage<SharedProps>();
+    const { auth } = page.props;
+    const url = page.url;
     const isSuperAdmin =
         auth.user?.role?.slug === 'super-admin';
 

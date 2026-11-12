@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Web\BusinessSolutionController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ServiceController;
@@ -43,6 +44,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::post('/logout', [LoginController::class, 'destroy'])
             ->name('logout');
+    });
+
+    Route::middleware('super-admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])
+            ->name('users.index');
+
+        Route::get('/users/create', [UserController::class, 'create'])
+            ->name('users.create');
+
+        Route::post('/users', [UserController::class, 'store'])
+            ->name('users.store');
+            
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])
+            ->name('users.edit');
+
+        Route::put('/users/{user}', [UserController::class, 'update'])
+            ->name('users.update');   
     });
 
 });

@@ -1,4 +1,4 @@
-import { router, usePage, type PageProps } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { LogOut, Menu, UserCircle } from 'lucide-react';
 
 interface AuthUser {
@@ -13,7 +13,9 @@ interface AuthUser {
     } | null;
 }
 
-interface SharedProps extends PageProps {
+interface SharedProps {
+    [key: string]: unknown;
+
     auth: {
         user: AuthUser | null;
     };
