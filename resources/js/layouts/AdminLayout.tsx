@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import AdminSidebar from '../components/layout/admin/AdminSidebar';
 import AdminTopbar from '../components/layout/admin/AdminTopbar';
+import FlashMessage from '../components/ui/FlashMessage';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -15,6 +16,8 @@ export default function AdminLayout({
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <FlashMessage />
+
             <div className="flex min-h-screen">
                 <AdminSidebar
                     isOpen={sidebarOpen}

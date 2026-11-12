@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Web\BusinessSolutionController;
 use App\Http\Controllers\Web\HomeController;
@@ -60,7 +61,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('users.edit');
 
         Route::put('/users/{user}', [UserController::class, 'update'])
-            ->name('users.update');   
+            ->name('users.update'); 
+            
+            
+        Route::get('/roles', [RoleController::class, 'index'])
+            ->name('roles.index');
+
+        Route::get('/roles/create', [RoleController::class, 'create'])
+            ->name('roles.create');
+
+        Route::post('/roles', [RoleController::class, 'store'])
+            ->name('roles.store');    
+
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])
+            ->name('roles.edit');
+
+        Route::put('/roles/{role}', [RoleController::class, 'update'])
+            ->name('roles.update');   
+
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])
+        ->name('roles.destroy');   
     });
 
 });
