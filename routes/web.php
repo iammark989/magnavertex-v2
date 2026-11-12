@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ServiceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\BusinessSolutionController as AdminBusinessSolutionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +50,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('services', AdminServiceController::class)
             ->except(['show'])
-            ->names('services');    
+            ->names('services');
+        Route::resource('business-solutions', AdminBusinessSolutionController::class)
+            ->except(['show'])
+            ->names('business-solutions');        
     });
 
     Route::middleware('super-admin')->group(function () {
