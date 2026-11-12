@@ -102,7 +102,9 @@ export default function ServicesSection({
                     sm:grid-cols-2
                     lg:gap-8
                 ">
-                    {services.map((service) => (
+                    {services
+                    .filter((service) => service.is_featured)
+                    .map((service) => (
                         <ServiceCard
                             key={service.id}
                             title={service.title}

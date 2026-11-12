@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\BusinessSolutionController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ServiceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::post('/logout', [LoginController::class, 'destroy'])
             ->name('logout');
+
+        Route::resource('services', AdminServiceController::class)
+            ->except(['show'])
+            ->names('services');    
     });
 
     Route::middleware('super-admin')->group(function () {
