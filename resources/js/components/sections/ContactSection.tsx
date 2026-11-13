@@ -1,4 +1,5 @@
 import { Mail, MapPin } from "lucide-react";
+import { useForm } from "@inertiajs/react";
 import { useState } from "react";
 
 import Container from "../ui/Container";
@@ -13,19 +14,23 @@ const services = [
         'E-Commerce Solutions',
 ];
 
-const [ formData, setFormData ] = useState({
+const {
+    data: formData,
+    setData,
+    post,
+    processing: isSubmitting,
+    errors,
+    reset,
+} = useForm({
     name: "",
     email: "",
     company: "",
     project_type: "",
     subject: "",
     message: "",
-})
+});
 
-const [ isSubmitting, setIsSubmitting ] = useState(false);
-const [ errors, setErrors ] = useState<Record<string, string[]>>({});
 const [successMessage, setSuccessMessage] = useState("");
-const [generalError, setGeneralError] = useState("");
 
 
 const handleChange = (
@@ -33,69 +38,24 @@ const handleChange = (
 ) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-    }));
+    setData(name as keyof typeof formData, value);
 };
 
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setIsSubmitting(true);
-    setErrors({});
     setSuccessMessage("");
-    setGeneralError("");
 
-    try {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/contact`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify(formData),
-            }
-        );
-
-        const data = await response.json();
-
-        if (response.status === 422) {
-            setErrors(data.errors || {});
-            return;
-        }
-
-        if (!response.ok) {
-            setGeneralError(
-                "Something went wrong. Please try again later."
+    post("/contact", {
+        preserveScroll: true,
+        onSuccess: () => {
+            reset();
+            setSuccessMessage(
+                "Your message has been sent successfully. We'll get back to you soon."
             );
-            return;
-        }
-
-        setSuccessMessage(
-            "Your message has been sent successfully. We'll get back to you soon."
-        );
-
-        setFormData({
-            name: "",
-            email: "",
-            company: "",
-            project_type: "",
-            subject: "",
-            message: "",
-        });
-    } catch (error) {
-       // console.error(error);
-
-        setGeneralError(
-            "Unable to send your message. Please check your connection and try again."
-        );
-    } finally {
-        setIsSubmitting(false);
-    }
+        },
+    });
 };
 
     return (
@@ -330,24 +290,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                         </div>
                     )}
 
-                    {generalError && (
-                        <div
-                            className="
-                                mb-5
-                                rounded-lg
-                                border
-                                border-red-400/20
-                                bg-red-400/10
-                                px-4
-                                py-3
-                                text-sm
-                                text-red-300
-                            "
-                        >
-                            {generalError}
-                        </div>
-                    )}
-
                         <form onSubmit={handleSubmit} className="space-y-5">
 
                             <div>
@@ -391,7 +333,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                                 />
                                 {errors.name && (
                                     <p className="mt-1 text-sm text-red-400">
-                                        {errors.name[0]}
+                                        {errors.name}
                                     </p>
                                 )}
                             </div>

@@ -53,7 +53,7 @@ const navigation = [
             },
             {
                 name: 'Contact Inquiries',
-                href: '/admin/inquiries',
+                href: '/admin/contact-inquiries',
                 icon: MessageSquare,
             },
         ],

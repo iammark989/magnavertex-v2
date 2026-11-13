@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\BusinessSolutionController as AdminBusinessSolutionController;
 use App\Http\Controllers\Admin\BusinessSolutionImageController;
+use App\Http\Controllers\Web\ContactInquiryController;
+use App\Http\Controllers\Admin\ContactInquiryController as AdminContactInquiryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
@@ -26,6 +28,9 @@ Route::get('/business-solutions/{slug}', [BusinessSolutionController::class, 'sh
 
 Route::get('/services/{slug}', [ServiceController::class, 'show'])
     ->name('services.show');
+
+Route::post('/contact', [ContactInquiryController::class, 'store'])
+    ->name('contact.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +62,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('business-solutions', AdminBusinessSolutionController::class)
             ->except(['show'])
             ->names('business-solutions');
+
+        Route::get('/contact-inquiries', [AdminContactInquiryController::class, 'index'])
+            ->name('contact-inquiries.index');
+
+        Route::get('/contact-inquiries/{contactInquiry}', [AdminContactInquiryController::class, 'show'])
+            ->name('contact-inquiries.show');
+
+        Route::put('/contact-inquiries/{contactInquiry}', [AdminContactInquiryController::class, 'update'])
+            ->name('contact-inquiries.update');    
             
         Route::post(
             'business-solutions/{businessSolution}/images',
@@ -97,7 +111,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::put('/users/{user}', [UserController::class, 'update'])
             ->name('users.update'); 
-            
             
         Route::get('/roles', [RoleController::class, 'index'])
             ->name('roles.index');
