@@ -126,7 +126,7 @@ export default function BusinessSolutionCard({
                         gap-2
                     "
                 >
-                    {technologies.map((technology) => (
+                    {(technologies ?? []).map((technology) => (
                         <span
                             key={technology}
                             className="

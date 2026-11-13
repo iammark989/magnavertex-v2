@@ -1,15 +1,17 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\Auth\LoginController;
+use App\Http\Controllers\Admin\BusinessSolutionController as AdminBusinessSolutionController;
+use App\Http\Controllers\Admin\BusinessSolutionImageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Web\BusinessSolutionController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ServiceController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
-use App\Http\Controllers\Admin\BusinessSolutionController as AdminBusinessSolutionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,9 +53,33 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('services', AdminServiceController::class)
             ->except(['show'])
             ->names('services');
+
         Route::resource('business-solutions', AdminBusinessSolutionController::class)
             ->except(['show'])
-            ->names('business-solutions');        
+            ->names('business-solutions');
+            
+        Route::post(
+            'business-solutions/{businessSolution}/images',
+            [BusinessSolutionImageController::class, 'store']
+        )->name('business-solutions.images.store');
+
+        Route::put(
+            'business-solutions/{businessSolution}/images/{image}',
+            [BusinessSolutionImageController::class, 'update']
+        )->name('business-solutions.images.update');
+
+        Route::delete(
+            'business-solutions/{businessSolution}/images/{image}',
+            [BusinessSolutionImageController::class, 'destroy']
+        )->name('business-solutions.images.destroy');
+        
+        Route::middleware('not-super-admin')->group(function () {
+            Route::get('/account', [AccountController::class, 'edit'])
+                ->name('account.edit');
+
+            Route::put('/account/password', [AccountController::class, 'updatePassword'])
+                ->name('account.password.update');
+        });
     });
 
     Route::middleware('super-admin')->group(function () {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSolution;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -62,7 +63,7 @@ class BusinessSolutionController extends Controller
             'business_challenge' => ['required', 'string'],
             'solution_description' => ['required', 'string'],
             'ideal_for' => ['required', 'string'],
-            'technologies' => ['nullable', 'array'],
+            'technologies' => ['required', 'array', 'min:1'],
             'technologies.*' => ['required', 'string', 'max:100'],
             'demo_url' => ['nullable', 'url', 'max:255'],
             'featured_image' => ['nullable', 'image', 'max:5120'],
@@ -95,11 +96,16 @@ class BusinessSolutionController extends Controller
             ? Storage::disk('public')->url($businessSolution->featured_image)
             : null;
 
+        $businessSolution->images->each(function ($image) {
+            $image->image = Storage::disk('public')->url($image->image);
+        });
+
         return Inertia::render('admin/business-solutions/Edit', [
             'solution' => $businessSolution,
         ]);
     }
 
+    
     public function update(
         Request $request,
         BusinessSolution $businessSolution
@@ -123,31 +129,97 @@ class BusinessSolutionController extends Controller
             'business_challenge' => ['required', 'string'],
             'solution_description' => ['required', 'string'],
             'ideal_for' => ['required', 'string'],
-            'technologies' => ['nullable', 'array'],
+            'technologies' => ['required', 'array', 'min:1'],
             'technologies.*' => ['required', 'string', 'max:100'],
             'demo_url' => ['nullable', 'url', 'max:255'],
             'featured_image' => ['nullable', 'image', 'max:5120'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_featured' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
+
+            // Capabilities
+            'capabilities' => ['sometimes', 'array'],
+            'capabilities.*.id' => [
+                'nullable',
+                'integer',
+                'distinct',
+                Rule::exists('business_solution_capabilities', 'id')
+                    ->where('business_solution_id', $businessSolution->id),
+            ],
+            'capabilities.*.title' => ['required', 'string', 'max:150'],
+            'capabilities.*.description' => ['nullable', 'string'],
+            'capabilities.*.sort_order' => ['required', 'integer', 'min:0'],
         ]);
+
+        $oldImage = $businessSolution->featured_image;
+        $newImage = null;
 
         unset($validated['featured_image']);
 
-        $oldImage = $businessSolution->featured_image;
-
         if ($request->hasFile('featured_image')) {
-            $validated['featured_image'] = $request
+            $newImage = $request
                 ->file('featured_image')
                 ->store('business-solutions', 'public');
+
+            $validated['featured_image'] = $newImage;
         }
 
-        $businessSolution->update($validated);
+        $capabilities = $validated['capabilities'] ?? null;
+        unset($validated['capabilities']);
 
-        if (
-            $request->hasFile('featured_image') &&
-            $oldImage
-        ) {
+        try {
+            DB::transaction(function () use (
+                $businessSolution,
+                $validated,
+                $capabilities
+            ) {
+                // Update the main business solution.
+                $businessSolution->update($validated);
+
+                // Synchronize capabilities when submitted.
+                if ($capabilities !== null) {
+                    $submittedIds = collect($capabilities)
+                        ->pluck('id')
+                        ->filter()
+                        ->all();
+
+                    // Remove capabilities no longer submitted.
+                    if (count($submittedIds) > 0) {
+                        $businessSolution->capabilities()
+                            ->whereNotIn('id', $submittedIds)
+                            ->delete();
+                    } else {
+                        $businessSolution->capabilities()->delete();
+                    }
+
+                    // Create new capabilities or update existing ones.
+                    foreach ($capabilities as $capability) {
+                        $data = [
+                            'title' => $capability['title'],
+                            'description' => $capability['description'] ?? null,
+                            'sort_order' => $capability['sort_order'],
+                        ];
+
+                        if (!empty($capability['id'])) {
+                            $businessSolution->capabilities()
+                                ->where('id', $capability['id'])
+                                ->update($data);
+                        } else {
+                            $businessSolution->capabilities()->create($data);
+                        }
+                    }
+                }
+            });
+        } catch (\Throwable $exception) {
+            if ($newImage) {
+                Storage::disk('public')->delete($newImage);
+            }
+
+            throw $exception;
+        }
+
+        // Delete the previous featured image after a successful update.
+        if ($newImage && $oldImage) {
             Storage::disk('public')->delete($oldImage);
         }
 
@@ -155,6 +227,7 @@ class BusinessSolutionController extends Controller
             ->route('admin.business-solutions.index')
             ->with('success', 'Business solution updated successfully.');
     }
+
 
     public function destroy(BusinessSolution $businessSolution): RedirectResponse
     {

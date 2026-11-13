@@ -293,7 +293,7 @@ export default function Create() {
                     {/* Technologies */}
                     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                         <h2 className="text-lg font-semibold text-slate-800">
-                            Technologies
+                            Technologies <span className='text-red-500'>*</span>
                         </h2>
                         <p className="mt-1 text-sm text-slate-500">
                             Add the technologies and tools used to build this solution.

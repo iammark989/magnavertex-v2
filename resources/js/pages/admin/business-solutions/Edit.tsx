@@ -1,6 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import AdminLayout from '../../../layouts/AdminLayout';
-import { ArrowLeft, ImagePlus, Save, X } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Save, X, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface BusinessSolution {
@@ -18,6 +18,15 @@ interface BusinessSolution {
     sort_order: number;
     is_featured: boolean;
     is_active: boolean;
+    capabilities: Capability[];
+    images: BusinessSolutionImage[];
+}
+
+interface Capability {
+    id: number | null;
+    title: string;
+    description: string;
+    sort_order: number;
 }
 
 interface EditProps {
@@ -38,6 +47,20 @@ interface BusinessSolutionForm {
     sort_order: number;
     is_featured: boolean;
     is_active: boolean;
+    capabilities: Capability[];
+}
+
+interface BusinessSolutionImage {
+    id: number;
+    image: string;
+    caption: string | null;
+    sort_order: number;
+}
+
+interface PendingGalleryImage {
+    file: File;
+    preview: string;
+    caption: string;
 }
 
 export default function Edit({ solution }: EditProps) {
@@ -56,11 +79,24 @@ export default function Edit({ solution }: EditProps) {
             sort_order: solution.sort_order,
             is_featured: solution.is_featured,
             is_active: solution.is_active,
+            capabilities: (solution.capabilities ?? []).map((capability) => ({
+                id: capability.id,
+                title: capability.title,
+                description: capability.description ?? '',
+                sort_order: capability.sort_order,
+            })),
         });
 
     const [technologyInput, setTechnologyInput] = useState('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(true);
+    const [pendingGalleryImages, setPendingGalleryImages] = useState<
+        PendingGalleryImage[]
+    >([]);
+
+    const [galleryImageEdits, setGalleryImageEdits] = useState<
+        Record<number, { caption?: string; sort_order?: number }>
+    >({});
 
     useEffect(() => {
         return () => {
@@ -111,6 +147,137 @@ export default function Edit({ solution }: EditProps) {
 
         setData('featured_image', file);
         setImagePreview(file ? URL.createObjectURL(file) : null);
+    };
+
+    const handleCapabilityAdd = () => {
+        setData('capabilities', [
+            ...data.capabilities,
+            {
+                id: null,
+                title: '',
+                description: '',
+                sort_order: data.capabilities.length + 1,
+            },
+        ]);
+    };
+
+    const handleCapabilityChange = (
+        index: number,
+        field: keyof Capability,
+        value: string | number | null
+    ) => {
+        const updatedCapabilities = [...data.capabilities];
+
+        updatedCapabilities[index] = {
+            ...updatedCapabilities[index],
+            [field]: value,
+        };
+
+        setData('capabilities', updatedCapabilities);
+    };
+
+    const handleCapabilityRemove = (index: number) => {
+        const updatedCapabilities = data.capabilities
+            .filter((_, capabilityIndex) => capabilityIndex !== index)
+            .map((capability, capabilityIndex) => ({
+                ...capability,
+                sort_order: capabilityIndex + 1,
+            }));
+
+        setData('capabilities', updatedCapabilities);
+    };
+
+    const handleGalleryImagesChange = (files: FileList | null) => {
+        if (!files) return;
+
+        const newImages = Array.from(files).map((file) => ({
+            file,
+            preview: URL.createObjectURL(file),
+            caption: '',
+        }));
+
+        setPendingGalleryImages((previous) => [
+            ...previous,
+            ...newImages,
+        ]);
+    };
+
+    const handlePendingGalleryCaptionChange = (
+        index: number,
+        caption: string
+    ) => {
+        setPendingGalleryImages((previous) =>
+            previous.map((image, imageIndex) =>
+                imageIndex === index
+                    ? { ...image, caption }
+                    : image
+            )
+        );
+    };
+
+    const handlePendingGalleryRemove = (index: number) => {
+        setPendingGalleryImages((previous) => {
+            const imageToRemove = previous[index];
+
+            if (imageToRemove) {
+                URL.revokeObjectURL(imageToRemove.preview);
+            }
+
+            return previous.filter(
+                (_, imageIndex) => imageIndex !== index
+            );
+        });
+    };
+
+    const handleGalleryUpload = () => {
+        if (pendingGalleryImages.length === 0) return;
+
+        router.post(
+            `/admin/business-solutions/${solution.id}/images`,
+            {
+                images: pendingGalleryImages.map((image) => image.file),
+                captions: pendingGalleryImages.map((image) => image.caption),
+            },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    pendingGalleryImages.forEach((image) => {
+                        URL.revokeObjectURL(image.preview);
+                    });
+
+                    setPendingGalleryImages([]);
+                },
+            }
+        );
+    };
+
+    const handleGalleryImageUpdate = (
+        image: BusinessSolutionImage
+    ) => {
+        router.put(
+            `/admin/business-solutions/${solution.id}/images/${image.id}`,
+            {
+                caption: image.caption ?? '',
+                sort_order: image.sort_order,
+            },
+            {
+                preserveScroll: true,
+            }
+        );
+    };
+
+    const handleGalleryImageDelete = (image: BusinessSolutionImage) => {
+        if (!window.confirm('Are you sure you want to delete this gallery image?')) {
+            return;
+        }
+
+        router.delete(
+            `/admin/business-solutions/${solution.id}/images/${image.id}`,
+            {
+                preserveScroll: true,
+            }
+        );
     };
 
     const handleSubmit = (event: React.FormEvent) => {
@@ -304,10 +471,364 @@ export default function Edit({ solution }: EditProps) {
                         </div>
                     </section>
 
+                    {/* Key Capabilities */}
+                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-800">
+                                    Key Capabilities
+                                </h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Manage the features and capabilities displayed on the public solution page.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleCapabilityAdd}
+                                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+                            >
+                                <Plus size={16} />
+                                Add Capability
+                            </button>
+                        </div>
+
+                        <div className="mt-5 space-y-4">
+                            {data.capabilities.length === 0 ? (
+                                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center">
+                                    <p className="text-sm font-medium text-slate-600">
+                                        No capabilities added yet.
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        Click Add Capability to add your first capability.
+                                    </p>
+                                </div>
+                            ) : (
+                                data.capabilities.map((capability, index) => (
+                                    <div
+                                        key={capability.id ?? `new-${index}`}
+                                        className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
+                                    >
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold text-slate-700">
+                                                Capability {index + 1}
+                                            </h3>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCapabilityRemove(index)}
+                                                className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-700"
+                                            >
+                                                <Trash2 size={15} />
+                                                Remove
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                                            <div className="md:col-span-3">
+                                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                                    Capability Title <span className="text-red-500">*</span>
+                                                </label>
+
+                                                <input
+                                                    type="text"
+                                                    value={capability.title}
+                                                    onChange={(e) =>
+                                                        handleCapabilityChange(index, 'title', e.target.value)
+                                                    }
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    placeholder="e.g. Inventory Management"
+                                                />
+
+                                                {errors[`capabilities.${index}.title`] && (
+                                                    <p className="mt-1 text-sm text-red-600">
+                                                        {errors[`capabilities.${index}.title`]}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                                    Display Order
+                                                </label>
+
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={capability.sort_order}
+                                                    onChange={(e) =>
+                                                        handleCapabilityChange(
+                                                            index,
+                                                            'sort_order',
+                                                            Number(e.target.value)
+                                                        )
+                                                    }
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                />
+
+                                                {errors[`capabilities.${index}.sort_order`] && (
+                                                    <p className="mt-1 text-sm text-red-600">
+                                                        {errors[`capabilities.${index}.sort_order`]}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="md:col-span-4">
+                                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                                    Description
+                                                </label>
+
+                                                <textarea
+                                                    rows={3}
+                                                    value={capability.description}
+                                                    onChange={(e) =>
+                                                        handleCapabilityChange(
+                                                            index,
+                                                            'description',
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    placeholder="Describe what this capability does..."
+                                                />
+
+                                                {errors[`capabilities.${index}.description`] && (
+                                                    <p className="mt-1 text-sm text-red-600">
+                                                        {errors[`capabilities.${index}.description`]}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {errors.capabilities && (
+                            <p className="mt-3 text-sm text-red-600">
+                                {errors.capabilities}
+                            </p>
+                        )}
+                    </section>
+
+
+                    {/* Gallery Images */}
+                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <h2 className="text-lg font-semibold text-slate-800">
+                            Project Gallery
+                        </h2>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Upload and manage screenshots or images displayed on the public solution page.
+                        </p>
+
+                        {/* Existing Gallery Images */}
+                        <div className="mt-5">
+                            <h3 className="mb-3 text-sm font-semibold text-slate-700">
+                                Existing Images ({solution.images?.length ?? 0})
+                            </h3>
+
+                            {!solution.images || solution.images.length === 0 ? (
+                                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+                                    <ImagePlus size={28} className="mx-auto text-slate-400" />
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        No gallery images uploaded yet.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {solution.images.map((image) => (
+                                        <div
+                                            key={image.id}
+                                            className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                                        >
+                                            <img
+                                                src={image.image}
+                                                alt={image.caption || solution.title}
+                                                className="h-44 w-full object-cover"
+                                            />
+
+                                            <div className="space-y-3 p-4">
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-slate-600">
+                                                        Caption
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={
+                                                            galleryImageEdits[image.id]?.caption ??
+                                                            image.caption ??
+                                                            ''
+                                                        }
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            // Existing image data is updated in the next step.
+                                                            setGalleryImageEdits((previous) => ({
+                                                                ...previous,
+                                                                [image.id]: {
+                                                                    ...previous[image.id],
+                                                                    caption: value,
+                                                                },
+                                                            }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                        placeholder="Optional image caption"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-slate-600">
+                                                        Display Order
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={
+                                                            galleryImageEdits[image.id]?.sort_order ??
+                                                            image.sort_order
+                                                        }
+                                                        onChange={(e) => {
+                                                            const value = Number(e.target.value);
+                                                            setGalleryImageEdits((previous) => ({
+                                                                ...previous,
+                                                                [image.id]: {
+                                                                    ...previous[image.id],
+                                                                    sort_order: value,
+                                                                },
+                                                            }));
+                                                        }}
+                                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const edits = galleryImageEdits[image.id];
+
+                                                            handleGalleryImageUpdate({
+                                                                ...image,
+                                                                caption: edits?.caption ?? image.caption,
+                                                                sort_order: edits?.sort_order ?? image.sort_order,
+                                                            });
+                                                        }}
+                                                        className="cursor-pointer rounded-lg bg-sky-600 px-3 py-2 text-xs font-medium text-white hover:bg-sky-700"
+                                                    >
+                                                        Save Changes
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleGalleryImageDelete(image)}
+                                                        className="cursor-pointer inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Upload New Gallery Images */}
+                        <div className="mt-8 border-t border-slate-200 pt-6">
+                            <h3 className="text-sm font-semibold text-slate-700">
+                                Upload New Images
+                            </h3>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                                You can select multiple images. JPG, PNG, or WEBP, up to 5MB each.
+                            </p>
+
+                            <label className="mt-4 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-center hover:border-sky-400">
+                                <ImagePlus size={30} className="text-slate-400" />
+                                <span className="mt-2 text-sm font-medium text-slate-600">
+                                    Click to select gallery images
+                                </span>
+                                <span className="mt-1 text-xs text-slate-400">
+                                    Multiple images supported
+                                </span>
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        handleGalleryImagesChange(e.target.files);
+                                        e.target.value = '';
+                                    }}
+                                />
+                            </label>
+
+                            {pendingGalleryImages.length > 0 && (
+                                <div className="mt-5 space-y-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                        {pendingGalleryImages.map((image, index) => (
+                                            <div
+                                                key={`${image.file.name}-${index}`}
+                                                className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                                            >
+                                                <img
+                                                    src={image.preview}
+                                                    alt={image.file.name}
+                                                    className="h-40 w-full object-cover"
+                                                />
+
+                                                <div className="space-y-3 p-3">
+                                                    <p className="truncate text-xs font-medium text-slate-600">
+                                                        {image.file.name}
+                                                    </p>
+
+                                                    <input
+                                                        type="text"
+                                                        value={image.caption}
+                                                        onChange={(e) =>
+                                                            handlePendingGalleryCaptionChange(
+                                                                index,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Optional caption"
+                                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    />
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handlePendingGalleryRemove(index)}
+                                                        className="cursor-pointer inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+                                                    >
+                                                        <X size={14} />
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleGalleryUpload}
+                                        className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700"
+                                    >
+                                        <ImagePlus size={16} />
+                                        Upload {pendingGalleryImages.length} Image(s)
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+
+
                     {/* Technologies */}
                     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                         <h2 className="text-lg font-semibold text-slate-800">
-                            Technologies
+                            Technologies <span className='text-red-500'>*</span>
                         </h2>
 
                         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -327,7 +848,7 @@ export default function Edit({ solution }: EditProps) {
                             <button
                                 type="button"
                                 onClick={handleTechnologyAdd}
-                                className="rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+                                className="cursor-pointer rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
                             >
                                 Add
                             </button>
