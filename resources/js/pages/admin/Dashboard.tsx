@@ -32,9 +32,27 @@ interface DashboardSummary {
     users: number;
 }
 
+interface ContentOverview {
+    services: {
+        active: number;
+        inactive: number;
+    };
+    businessSolutions: {
+        active: number;
+        inactive: number;
+    };
+    inquiries: {
+        new: number;
+        in_progress: number;
+        responded: number;
+        closed: number;
+    };
+}
+
 interface DashboardProps {
     dashboardSummary: DashboardSummary;
     contactSummary: ContactSummary;
+    contentOverview: ContentOverview;
     recentInquiries: RecentInquiry[];
 }
 
@@ -55,6 +73,7 @@ const statusLabels: Record<RecentInquiry['status'], string> = {
 export default function Dashboard({
     dashboardSummary,
     contactSummary,
+    contentOverview,
     recentInquiries,
 }: DashboardProps) {
     return (
@@ -109,6 +128,102 @@ export default function Dashboard({
                         <p className="mt-2 text-2xl font-bold text-slate-900">
                             {dashboardSummary.users}
                         </p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Content Overview
+                        </h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Overview of your website content and incoming inquiries.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                        {/* Services */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-700">
+                                Services
+                            </h3>
+
+                            <div className="mt-5 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-slate-500">Active</p>
+                                    <p className="mt-1 text-2xl font-bold text-emerald-600">
+                                        {contentOverview.services.active}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-500">Inactive</p>
+                                    <p className="mt-1 text-2xl font-bold text-slate-500">
+                                        {contentOverview.services.inactive}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Business Solutions */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-700">
+                                Business Solutions
+                            </h3>
+
+                            <div className="mt-5 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-slate-500">Active</p>
+                                    <p className="mt-1 text-2xl font-bold text-emerald-600">
+                                        {contentOverview.businessSolutions.active}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-500">Inactive</p>
+                                    <p className="mt-1 text-2xl font-bold text-slate-500">
+                                        {contentOverview.businessSolutions.inactive}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Contact Inquiry Status */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-700">
+                                Inquiry Status
+                            </h3>
+
+                            <div className="mt-5 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-slate-500">New</p>
+                                    <p className="mt-1 text-2xl font-bold text-sky-600">
+                                        {contentOverview.inquiries.new}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-500">In Progress</p>
+                                    <p className="mt-1 text-2xl font-bold text-amber-600">
+                                        {contentOverview.inquiries.in_progress}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-500">Responded</p>
+                                    <p className="mt-1 text-2xl font-bold text-emerald-600">
+                                        {contentOverview.inquiries.responded}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-slate-500">Closed</p>
+                                    <p className="mt-1 text-2xl font-bold text-slate-500">
+                                        {contentOverview.inquiries.closed}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -30,6 +30,25 @@ class DashboardController extends Controller
                 'closed' => ContactInquiry::where('status', 'closed')->count(),
             ],
 
+            'contentOverview' => [
+                'services' => [
+                    'active' => Service::where('is_active', true)->count(),
+                    'inactive' => Service::where('is_active', false)->count(),
+                ],
+
+                'businessSolutions' => [
+                    'active' => BusinessSolution::where('is_active', true)->count(),
+                    'inactive' => BusinessSolution::where('is_active', false)->count(),
+                ],
+
+                'inquiries' => [
+                    'new' => ContactInquiry::where('status', 'new')->count(),
+                    'in_progress' => ContactInquiry::where('status', 'in_progress')->count(),
+                    'responded' => ContactInquiry::where('status', 'responded')->count(),
+                    'closed' => ContactInquiry::where('status', 'closed')->count(),
+                ],
+            ],
+
             'recentInquiries' => ContactInquiry::query()
                 ->latest()
                 ->take(5)

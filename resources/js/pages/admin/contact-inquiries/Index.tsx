@@ -357,7 +357,7 @@ export default function Index({
                                                     onClick={() =>
                                                         router.visit(`/admin/contact-inquiries/${inquiry.id}`)
                                                     }
-                                                    className="cursor-pointer inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700"
+                                                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700"
                                                 >
                                                     <Eye size={14} />
                                                     View

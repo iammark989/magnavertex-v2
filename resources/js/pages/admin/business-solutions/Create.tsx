@@ -143,6 +143,7 @@ export default function Create() {
                                 </label>
                                 <input
                                     type="text"
+                                    maxLength={255}
                                     value={data.title}
                                     onChange={(e) => handleTitleChange(e.target.value)}
                                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -159,6 +160,7 @@ export default function Create() {
                                 </label>
                                 <input
                                     type="text"
+                                    maxLength={255}
                                     value={data.slug}
                                     onChange={(e) => {
                                         setSlugManuallyEdited(true);
@@ -178,6 +180,7 @@ export default function Create() {
                                 </label>
                                 <input
                                     type="text"
+                                    maxLength={255}
                                     value={data.category}
                                     onChange={(e) => setData('category', e.target.value)}
                                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -302,6 +305,7 @@ export default function Create() {
                         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                             <input
                                 type="text"
+                                maxLength={255}
                                 value={technologyInput}
                                 onChange={(e) => setTechnologyInput(e.target.value)}
                                 onKeyDown={(e) => {
