@@ -3,19 +3,7 @@ import ServiceCard from '../cards/ServicesCards/ServiceCard';
 
 import type { Service } from '../../types/service';
 
-import {
-    Globe,
-    Building2,
-    FileText,
-    Cloud,
-} from 'lucide-react';
-
-const SERVICE_ICONS = {
-    globe: Globe,
-    'building-2': Building2,
-    'file-text': FileText,
-    cloud: Cloud,
-} as const;
+import { getServiceIcon } from '../../utils/serviceIcons';
 
 interface ServicesSectionProps {
     services: Service[];
@@ -109,14 +97,7 @@ export default function ServicesSection({
                             key={service.id}
                             title={service.title}
                             description={service.short_description}
-                            icon={
-                                service.icon &&
-                                service.icon in SERVICE_ICONS
-                                    ? SERVICE_ICONS[
-                                        service.icon as keyof typeof SERVICE_ICONS
-                                    ]
-                                    : Globe
-                            }
+                            icon={getServiceIcon(service.icon)}
                             slug={service.slug}
                         />
                     ))}

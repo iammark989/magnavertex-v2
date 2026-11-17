@@ -10,6 +10,8 @@ import {
     MessageCircle,
 } from 'lucide-react';
 
+import { getServiceIcon } from '../../utils/serviceIcons';
+
 import Container from '../../components/ui/Container';
 import WebLayout from '../../layouts/WebLayout';
 import { scrollToSection } from '../../utils/sectionNavigation';
@@ -34,8 +36,7 @@ const BENEFITS = [
 ];
 
 export default function ServicePage({ service }: ServicePageProps) {
-    const ServiceIcon =
-        SERVICE_ICONS[service.icon as keyof typeof SERVICE_ICONS] ?? Globe;
+    const ServiceIcon = getServiceIcon(service.icon);
 
     return (
         <WebLayout>
